@@ -36,7 +36,7 @@ class MessagingAdapter : RecyclerView.Adapter<MessagingAdapter.MessageViewHolder
                 holder.itemView.findViewById<TextView>(R.id.tv_bot_message).visibility = View.GONE
             }
             RECEIVE_ID ->{
-                holder.itemView.findViewById<TextView>(R.id.tv_bot_message).apply {
+                holder.itemView.findViewById<TextView>(R.id.tv_bot_message  ).apply {
                     text=currentMessage.message
                     visibility = View.VISIBLE
                 }

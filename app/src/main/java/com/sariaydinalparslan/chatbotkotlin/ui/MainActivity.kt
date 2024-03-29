@@ -33,11 +33,70 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun clickEvents() {
-        findViewById<Button>(R.id.btn_send).setOnClickListener {
-            sendMessage()
+        private fun clickEvents() {
+            findViewById<Button>(R.id.btn_send).setOnClickListener {
+                sendMessage()
+            }
+            findViewById<EditText>(R.id.et_message).setOnClickListener {
+                GlobalScope.launch {
+                    delay(1000)
+                    withContext(Dispatchers.Main) {
+                        findViewById<RecyclerView>(R.id.rv_messages).scrollToPosition(adapter.itemCount - 1)
+                    }
+                }
+            }
         }
-        findViewById<EditText>(R.id.et_message).setOnClickListener {
+
+        private fun recyclerView() {
+            adapter = MessagingAdapter()
+            findViewById<RecyclerView>(R.id.rv_messages).adapter = adapter
+            findViewById<RecyclerView>(R.id.rv_messages).layoutManager = LinearLayoutManager(applicationContext)
+
+        }
+
+        private fun sendMessage() {
+            val message = findViewById<EditText>(R.id.et_message).text.toString()
+            val timeStamp = Time.timeStamp()
+
+            if (message.isNotEmpty()) {
+                findViewById<EditText>(R.id.et_message).setText("")
+                adapter.insertMessage(Message(message, SEND_ID, timeStamp))
+                findViewById<RecyclerView>(R.id.rv_messages).scrollToPosition(adapter.itemCount - 1)
+                botResponse(message)
+            }
+        }
+
+        private fun botResponse(message: String) {
+            val timeStamp = Time.timeStamp()
+            GlobalScope.launch {
+                delay(1000)
+                withContext(Dispatchers.Main) {
+                    val response = BotResponse.basicResponse(message)
+                    adapter.insertMessage(Message(response, RECEIVE_ID, timeStamp))
+                    findViewById<RecyclerView>(R.id.rv_messages).scrollToPosition(adapter.itemCount - 1)
+
+                    when (response) {
+                        OPEN_GOOGLE -> {
+                            val site = Intent(Intent.ACTION_VIEW)
+                            site.data = Uri.parse("https://www.google.com/")
+                            startActivity(site)
+                        }
+
+                        OPEN_SEARCH -> {
+                            val site = Intent(Intent.ACTION_VIEW)
+                            val searchTerm: String? = message.substringAfter("search")
+                            site.data = Uri.parse("https://www.google.com/search?&q=$searchTerm")
+                            startActivity(site)
+                        }
+                    }
+                }
+            }
+
+        }
+
+        override fun onStart() {
+            super.onStart()
+
             GlobalScope.launch {
                 delay(1000)
                 withContext(Dispatchers.Main) {
@@ -45,80 +104,21 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
 
-    private fun recyclerView() {
-        adapter = MessagingAdapter()
-        findViewById<RecyclerView>(R.id.rv_messages).adapter = adapter
-        findViewById<RecyclerView>(R.id.rv_messages).layoutManager = LinearLayoutManager(applicationContext)
+        private fun customMessage(message: String) {
+            GlobalScope.launch {
+                delay(1000)
+                withContext(Dispatchers.Main) {
+                    val timeStamp = Time.timeStamp()
+                    adapter.insertMessage(
+                        Message(
+                            message.toString(), RECEIVE_ID, timeStamp
+                        )
+                    )
 
-    }
-
-    private fun sendMessage() {
-        val message = findViewById<EditText>(R.id.et_message).text.toString()
-        val timeStamp = Time.timeStamp()
-
-        if (message.isNotEmpty()) {
-            findViewById<EditText>(R.id.et_message).setText("")
-            adapter.insertMessage(Message(message, SEND_ID, timeStamp))
-            findViewById<RecyclerView>(R.id.rv_messages).scrollToPosition(adapter.itemCount - 1)
-            botResponse(message)
-        }
-    }
-
-    private fun botResponse(message: String) {
-        val timeStamp = Time.timeStamp()
-        GlobalScope.launch {
-            delay(1000)
-            withContext(Dispatchers.Main) {
-                val response = BotResponse.basicResponse(message)
-                adapter.insertMessage(Message(response, RECEIVE_ID, timeStamp))
-                findViewById<RecyclerView>(R.id.rv_messages).scrollToPosition(adapter.itemCount - 1)
-
-                when (response) {
-                    OPEN_GOOGLE -> {
-                        val site = Intent(Intent.ACTION_VIEW)
-                        site.data = Uri.parse("https://www.google.com/")
-                        startActivity(site)
-                    }
-
-                    OPEN_SEARCH -> {
-                        val site = Intent(Intent.ACTION_VIEW)
-                        val searchTerm: String? = message.substringAfter("search")
-                        site.data = Uri.parse("https://www.google.com/search?&q=$searchTerm")
-                        startActivity(site)
-                    }
+                    findViewById<RecyclerView>(R.id.rv_messages).scrollToPosition(adapter.itemCount - 1)
                 }
             }
         }
-
-    }
-
-    override fun onStart() {
-        super.onStart()
-
-        GlobalScope.launch {
-            delay(1000)
-            withContext(Dispatchers.Main) {
-                findViewById<RecyclerView>(R.id.rv_messages).scrollToPosition(adapter.itemCount - 1)
-            }
-        }
-    }
-
-    private fun customMessage(message: String) {
-        GlobalScope.launch {
-            delay(1000)
-            withContext(Dispatchers.Main) {
-                val timeStamp = Time.timeStamp()
-                adapter.insertMessage(
-                    Message(
-                        message.toString(), RECEIVE_ID, timeStamp
-                    )
-                )
-
-                findViewById<RecyclerView>(R.id.rv_messages).scrollToPosition(adapter.itemCount - 1)
-            }
-        }
-    }
 
 }
